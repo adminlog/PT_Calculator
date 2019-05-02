@@ -1,0 +1,169 @@
+<!--
+MIT License
+
+Copyright (c) 2019 Anthony Reimche
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style>
+		body{background-color:#EEEEEE;}
+		div{
+		font-family:courier;
+			text-align: center;
+		}
+		button{
+		font-family:courier;
+		background-color: #555555;
+		border: none;
+		color: white;
+		padding: 15px 32px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 16px;
+		}
+	</style>
+	</head>
+	<body>
+		<div>
+			<h1 style="margin-top:80px">FANUC CNC Lathe Pipe Threading Code Calculator</h1>
+			<h2 style="margin-top:30px">Created by Anthony Reimche<br>V1.0</h2>
+			<p>Generates FANUC pipe threading codes.<br>Does NOT support 5-axis / rotary mill.<br><br>Copyright (c) 2019 Anthony Reimche</p>
+		</div>
+		<div style="margin-top:160px">
+			<select id="ThreadType" onchange="OnThreadTypeChanged()">
+				<option value="500">Choose Thread Type</option>
+				<option value="0">PT</option>
+				<option value="1">NPT</option>
+			</select>
+			<br><br>
+		<div id="PT">
+			<select id="PTType" onchange="OnPTTypeChanged()">
+				<option value="500">Choose PT Type</option>
+				<option value="0">PT 1/8</option>
+				<option value="1">PT 1/4</option>
+				<option value="2">PT 3/8</option>
+				<option value="3">PT 1/2</option>
+				<option value="4">PT 3/4</option>
+				<option value="5">PT 1</option>
+				<option value="6">PT 1 1/4</option>
+				<option value="7">PT 1 1/2</option>
+				<option value="8">PT 2</option>
+				<option value="9">PT 2 1/2</option>
+				<option value="10">PT 3</option>
+				<option value="11">PT 3 1/2</option>
+				<option value="12">PT 4</option>
+				<option value="13">PT 5</option>
+				<option value="14">PT 6</option>
+				<option value="15">PT 7</option>
+				<option value="16">PT 8</option>
+				<option value="17">PT 9</option>
+				<option value="18">PT 10</option>
+				<option value="19">PT 12</option>
+			</select>
+		</div>
+		<br>
+		<form id="" action="Calculate()">
+			Taper: <input type="text" name="TaperH" value="1"> : <input type="text" name="TaperL" value="16">
+		</form>
+
+		<br><br>
+		<button onclick="Calculate()" id="Submit" style="background-color: #f44336">Calculate</button>
+		<br><br><br><br>
+		<p style="margin-top:30px" id="MajorDiameter"></p>
+	</div>
+	<div style="margin-top:50px; margin-bottom:200px; margin-left: 30%; text-align:left">
+		<p style="margin-top:10px" id="Data"></p>
+		<p style="margin-top:10px" id="Code"></p>
+	</div>
+	<script type="text/javascript">
+		var Type = "PT";
+		var PT = {
+			names: ["n","h","r","D","D2","D1","a","f","l","NA","B","OutW","InW"],
+			descriptions: ["Threads per Inch","Thread Height","Thread Radius","Major Diameter","Pitch Diameter","Minor Diameter","","","","","","Large Diameter",""],
+			values : [ [28,0.581,0.12,9.728,9.147,8.566,3.97,2.5,6.2,7.4,4.4,10.5,2.0], [19,0.856,0.18,13.157,12.301,11.445,6.01,3.7,9.4,11.0,6.7,13.8,2.3], [19,0.856,0.18,16.662,15.806,14.950,6.35,3.7,9.7,11.4,7.0,17.3,2.3], [14,1.162,0.25,20.955,19.793,18.631,8.16,5.0,12.7,15.0,9.1,21.7,2.8], [14,1.162,0.25,26.441,26.279,24.117,9.53,5.0,14.1,16.3,10.2,27.2,2.8], [11,1.479,0.32,33.249,31.770,30.291,10.39,6.4,16.2,19.0,11.5,34,3.2], [11,1.479,0.32,41.910,40.431,38.952,12.70,6.4,18.5,21.4,13.4,42.7,3.5], [11,1.479,0.32,47.803,46.324,44.845,12.70,6.4,18.5,21.4,13.4,48.6,3.5], [11,1.479,0.32,59.614,58.135,56.656,15.88,7.5,22.8,25.7,16.9,60.6,3.6], [11,1.479,0.32,75.184,73.705,72.226,17.46,9.2,26.7,30.2,18.6,76.3,4.2], [11,1.479,0.32,87.884,86.405,84.926,20.64,9.2,29.9,33.3,21.1,89.1,4.2], [11,1.479,0.32,100.330,98.851,97.372,22.23,9.2,31.5,34.9,22.4,101.6,4.2], [11,1.479,0.32,113.030,111.551,110.072,25.40,10.4,35.8,39.3,25.9,114.3,4.5], [11,1.479,0.32,138.430,136.951,135.472,28.58,11.5,40.1,43.6,29.3,139.8,4.5], [11,1.479,0.32,163.830,162.361,160.872,28.58,11.5,40.1,43.6,29.3,165.2,5.0], [11,1.479,0.32,189.230,187.751,186.272,34.93,14.0,48.9,45.0,35.1,190.7,5.3], [11,1.479,0.32,214.630,213.151,211.672,38.10,14.0,52.1,57.2,37.6,216.3,5.8], [11,1.479,0.32,240.030,233.551,237.072,38.10,14.0,52.1,57.2,37.6,241.8,6.2], [11,1.479,0.32,265.430,263.951,262.472,41.28,14.0,55.2,60.3,40.1,267.4,6.6], [11,1.479,0.32,316.230,814.961,313.272,41.28,17.5,58.7,65.1,41.9,318.5,6.9] ],
+		};
+/*
+		var Thread = {
+		Pitch:2,
+		Angle:60,
+		Length:14,
+		InitX:30,
+		InitZ:0,
+		Taper:0,
+		Finish:1,
+		Pullout:1,
+		Num:1,
+		};
+		var Settings = {
+			SafetyX:5,
+			Times:10,
+			Leave:0.05,
+		}
+*/
+		var ThreadType = document.getElementById("ThreadType");
+		var PTnum = document.getElementById("PTType");
+		var ptHTML = document.getElementById("PT").innerHTML;
+
+		//document.getElementById("PT").innerHTML = "";
+
+		function Calculate(){
+			//Reset
+			document.getElementById("Data").innerHTML = "";
+			document.getElementById("Code").innerHTML = "";
+
+			//Print PT Data
+			//if(ThreadType.selectedIndex >= 0 && ThreadType.selectedIndex <= 19){
+				for(var i = 0; i < PT.names.length; i++){
+					document.getElementById("Data").innerHTML += PT.descriptions[i] + "(" + PT.names[i] + ") = " + PT.values[PTnum.options[PTnum.selectedIndex].value][i] + "<br>";
+				}
+			//}
+
+			//Print Code
+			document.getElementById("Code").innerHTML = "Code:<br><br>";
+		}
+
+		function OnThreadTypeChanged(){
+			if(ThreadType.options[ThreadType.selectedIndex].value == 0){
+				Type = "PT";
+				document.getElementById("PT").innerHTML = ptHTML;
+			}else{
+				document.getElementById("PT").innerHTML = "";
+			}
+		}
+		function OnPTTypeChanged(){/*
+			for(var i = 0; i < PT.names.length; i++){
+				console.log(PT.names[i] + "= " + PT.values[document.getElementById("PTType").options[ThreadType.selectedIndex].value][i]);
+			}*/
+		}
+		function Convert2Gcode(rawNum){
+			if(rawNum % 1 == 0){
+				return (rawNum + ".");
+			}else{
+				return (Math.floor(rawNum * 1000) / 1000).toString();
+			}
+		}
+	</script>
+	</body>
+</html>
